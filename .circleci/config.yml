@@ -58,7 +58,7 @@ jobs:
                               --format progress \
                               $(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
       - store_test_results:
-        path: test_results
+          path: test_results
   deploy:
     working_directory: ~/app
     docker:
