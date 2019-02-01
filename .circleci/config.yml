@@ -1,70 +1,54 @@
-version: 2 # use CircleCI 2.0
-jobs: # a collection of steps
-  build: # runs not using Workflows must have a `build` job as entry point
-    parallelism: 3 # run three instances of this job in parallel
-    docker: # run the steps with Docker
-      - image: circleci/ruby:2.6.0-node-browsers-legacy # ...with this image as the primary container; this is where all `steps` will run
-        environment: # environment variables for primary container
+version: 2
+jobs:
+  build:
+    parallelism: 3
+    docker:
+      - image: circleci/ruby:2.6.0-node-browsers-legacy
+        environment:
           BUNDLE_JOBS: 3
           BUNDLE_RETRY: 3
           BUNDLE_PATH: vendor/bundle
           PGHOST: 127.0.0.1
           PGUSER: rails_cci_eb
           RAILS_ENV: test
-      - image: circleci/postgres:9.5-alpine # database image
-        environment: # environment variables for database
+      - image: circleci/postgres:9.5-alpine
+        environment:
           POSTGRES_USER: rails_cci_eb
           POSTGRES_DB: rails_cci_eb
           POSTGRES_PASSWORD: ""
-    steps: # a collection of executable commands
-      - checkout # special step to check out source code to working directory
-
-      # Which version of bundler?
+    steps:
+      - checkout
       - run:
           name: Which bundler?
           command: bundle -v
-
-      # Restore bundle cache
-      # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
       - restore_cache:
           keys:
             - rails-cci-eb-{{ checksum "Gemfile.lock" }}
             - rails-cci-eb-
-
-      - run: # Install Ruby dependencies
+      - run:
           name: Bundle Install
           command: bundle check || bundle install
-
-      # Store bundle cache for Ruby dependencies
       - save_cache:
           key: rails-cci-eb-{{ checksum "Gemfile.lock" }}
           paths:
             - vendor/bundle
-
-      # Only necessary if app uses webpacker or yarn in some other way
       - restore_cache:
           keys:
             - rails-cci-eb-yarn-{{ checksum "yarn.lock" }}
             - rails-cci-eb-yarn-
-
       - run:
           name: Yarn Install
           command: yarn install --cache-folder ~/.cache/yarn
-
-      # Store yarn / webpacker cache
       - save_cache:
           key: rails-cci-eb-yarn-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
-
       - run:
           name: Wait for DB
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
-
       - run:
           name: Database setup
           command: bin/rails db:schema:load --trace
-
       - run:
           name: Run rspec in parallel
           command: |
@@ -73,11 +57,8 @@ jobs: # a collection of steps
                               --out test_results/rspec.xml \
                               --format progress \
                               $(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
-
-      # Save test results for timing analysis
-      - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+      - store_test_results:
         path: test_results
-      # See https://circleci.com/docs/2.0/deployment-integrations/ for example deploy configs
   deploy:
     working_directory: ~/app
     docker:
@@ -87,7 +68,6 @@ jobs: # a collection of steps
       - run:
           name: Deploy to $CIRCLE_BRANCH
           command: eb deploy $CIRCLE_BRANCH
-
 workflows:
   version: 2
   build-and-deploy:
