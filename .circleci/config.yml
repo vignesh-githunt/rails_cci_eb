@@ -85,14 +85,17 @@ jobs: # a collection of steps
     steps:
       - checkout
       - run:
-        name: Deploying
-        command: eb deploy $CIRCLE_BRANCH
+          name: Deploy to $CIRCLE_BRANCH
+          command: eb deploy $CIRCLE_BRANCH
+
 workflows:
   version: 2
-  build:
+  build-and-deploy:
     jobs:
+      - build
       - deploy:
+        requires:
+          - build
         filters:
           branches:
-            only:
-              - production
+            only: production
