@@ -64,24 +64,18 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install awscli
+          name: Installing deployment dependencies
+          working_directory: /
           command: |
+            sudo apt-get -y -qq update
+            sudo apt-get install python-pip python-dev build-essential
             sudo pip install awsebcli --upgrade
-      - run:
-          name: Create AWS credentials manually
-          command: |
-            mkdir ~/.aws
-            touch ~/.aws/config
-            chmod 600 ~/.aws/config
-            echo "[profile eb-cli]" > ~/.aws/config
-            echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> ~/.aws/config
-            echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> ~/.aws/config
       - run:
           name: Deploy to $CIRCLE_BRANCH
           command: eb deploy $CIRCLE_BRANCH
 workflows:
   version: 2
-  deploy:
+  build-deploy:
     jobs:
       - build
       - deploy:
