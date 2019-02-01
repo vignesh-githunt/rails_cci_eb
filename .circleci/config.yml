@@ -74,9 +74,9 @@ workflows:
     jobs:
       - build
       - deploy:
-        requires:
-          - build
-        filters:
-          branches:
-            only:
-              - production
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - production
