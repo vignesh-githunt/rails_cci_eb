@@ -5,5 +5,5 @@ global:
   application_name: rails-cci-eb
   default_ec2_keyname: rails-cci-eb
   default_platform: Puma with Ruby 2.6 running on 64bit Amazon Linux/2.9.0
-  default_region: us-west-2
+  default_region: us-east-1
   sc: git
